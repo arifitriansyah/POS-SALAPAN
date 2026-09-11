@@ -170,17 +170,21 @@ function setPriceTier(tier) {
   renderCart();
 }
 
-// Toggle Mobile Cart Drawer
+// Toggle Mobile & Tablet Cart Drawer
 function toggleMobileCart(show) {
   AudioFX.playBeep(480, 0.03);
   const aside = document.getElementById('cart-aside');
+  const backdrop = document.getElementById('cart-backdrop');
   if (!aside) return;
+
   if (show) {
     aside.classList.remove('hidden');
     aside.classList.add('flex');
+    if (backdrop) backdrop.classList.remove('hidden');
   } else {
     aside.classList.add('hidden');
     aside.classList.remove('flex');
+    if (backdrop) backdrop.classList.add('hidden');
   }
 }
 
@@ -459,6 +463,17 @@ function renderCart() {
 
   const discountAmount = Math.round((subtotal * state.discountPercent) / 100);
   const finalTotal = Math.max(0, subtotal - discountAmount);
+
+  // Update Header Cart Badge (Mobile)
+  const headerBadge = document.getElementById('header-cart-badge');
+  if (headerBadge) {
+    if (totalItemsCount > 0) {
+      headerBadge.classList.remove('hidden');
+      headerBadge.textContent = totalItemsCount;
+    } else {
+      headerBadge.classList.add('hidden');
+    }
+  }
 
   // Update Mobile Floating Cart Bar
   const mobileBar = document.getElementById('mobile-cart-bar');
@@ -805,24 +820,17 @@ function renderHistoryTable(query = '') {
   if (emptyEl) emptyEl.classList.add('hidden');
 
   tbody.innerHTML = list.map(t => {
-    const totalQty = t.items.reduce((s, i) => s + i.qty, 0);
     return `
       <tr class="hover:bg-slate-800/40 transition">
-        <td class="py-2 px-3 font-semibold text-amber-400">${t.invoice}</td>
-        <td class="py-2 px-3 text-slate-400 text-[11px]">${t.formattedDate} ${t.formattedTime}</td>
-        <td class="py-2 px-3 text-slate-200">${t.customer} (${t.orderType})</td>
-        <td class="py-2 px-3 text-slate-300 text-[11px]">${totalQty} item</td>
-        <td class="py-2 px-3 font-bold text-slate-100">${formatRupiah(t.total)}</td>
-        <td class="py-2 px-3">
-          <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${t.paymentMethod === 'CASH' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">
-            ${t.paymentMethod}
-          </span>
-        </td>
-        <td class="py-2 px-3 text-right space-x-1">
-          <button onclick="reprintInvoice('${t.invoice}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] transition" title="Cetak Ulang">
+        <td class="py-2 px-2.5 font-semibold text-amber-400">${t.invoice}</td>
+        <td class="py-2 px-2.5 text-slate-400 text-[11px] hidden sm:table-cell">${t.formattedDate} ${t.formattedTime}</td>
+        <td class="py-2 px-2.5 text-slate-200">${t.customer} <span class="text-[10px] text-slate-400">(${t.orderType})</span></td>
+        <td class="py-2 px-2.5 font-bold text-slate-100">${formatRupiah(t.total)}</td>
+        <td class="py-2 px-2.5 text-right space-x-1 whitespace-nowrap">
+          <button onclick="reprintInvoice('${t.invoice}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] transition active:scale-95" title="Cetak Ulang">
             Cetak
           </button>
-          <button onclick="voidInvoice('${t.invoice}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-[11px] transition" title="Batalkan Transaksi">
+          <button onclick="voidInvoice('${t.invoice}')" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-[11px] transition active:scale-95" title="Batalkan Transaksi">
             Void
           </button>
         </td>
