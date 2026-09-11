@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POS Salapan Coffee & Eatery</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            salapan: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              200: '#fde68a',
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+              950: '#451a03',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden">
+
+  <!-- ================= TOP HEADER BAR ================= -->
+  <header class="no-print bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between flex-shrink-0 z-20">
+    <!-- Brand Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-black text-xl">
+        9
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent">SALAPAN</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-semibold border border-amber-500/20">POS v2.0</span>
+        </div>
+        <p class="text-[11px] text-slate-400 font-medium">Coffee & Eatery Point of Sale</p>
+      </div>
+    </div>
+
+    <!-- Mode Harga (Price Tier Switcher) -->
+    <div class="flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+      <!-- Mobile Select Dropdown -->
+      <div class="md:hidden flex items-center gap-1 px-1">
+        <i data-lucide="tag" class="w-3.5 h-3.5 text-amber-400"></i>
+        <select id="mobile-tier-select" onchange="setPriceTier(this.value)" class="bg-slate-900 border border-slate-700 text-xs text-amber-400 font-bold rounded-lg px-2 py-1 focus:outline-none">
+          <option value="offline" class="bg-slate-900 text-slate-100">Offline</option>
+          <option value="tax" class="bg-slate-900 text-slate-100">+10% Tax</option>
+          <option value="online" class="bg-slate-900 text-slate-100">Online</option>
+        </select>
+      </div>
+
+      <!-- Desktop Tier Buttons -->
+      <div class="hidden md:flex items-center">
+        <span class="text-xs text-slate-400 font-medium px-2 flex items-center gap-1.5">
+          <i data-lucide="tag" class="w-3.5 h-3.5 text-amber-400"></i> Mode:
+        </span>
+        <button type="button" id="tier-offline" onclick="setPriceTier('offline')" 
+          class="tier-btn px-3 py-1 rounded-lg text-xs font-semibold transition-all bg-amber-500 text-slate-950 shadow-sm"
+          title="Harga Normal / Menu Offline (Kolom B)">
+          Dine-in / Offline
+        </button>
+        <button type="button" id="tier-tax" onclick="setPriceTier('tax')" 
+          class="tier-btn px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all"
+          title="Harga Offline + PB1 10% (Kolom C)">
+          Offline + 10% Tax
+        </button>
+        <button type="button" id="tier-online" onclick="setPriceTier('online')" 
+          class="tier-btn px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all"
+          title="Harga GrabFood / GoFood / ShopeeFood (Kolom E)">
+          Online Delivery
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Header Actions & Clock -->
+    <div class="flex items-center gap-2.5">
+      <!-- Live Clock -->
+      <div class="hidden lg:flex flex-col items-end pr-3 border-r border-slate-800">
+        <span id="live-clock" class="text-xs font-mono font-semibold text-slate-200">12:00:00</span>
+        <span id="live-date" class="text-[10px] text-slate-400">Jumat, 11 Sep 2026</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <button onclick="openHistoryModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition border border-slate-700/60 shadow-sm">
+        <i data-lucide="receipt" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span>Riwayat</span>
+      </button>
+
+      <button onclick="openReportModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition border border-slate-700/60 shadow-sm">
+        <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span>Laporan</span>
+      </button>
+
+      <!-- Kasir Info -->
+      <div class="flex items-center gap-2 pl-2 border-l border-slate-800">
+        <div class="w-8 h-8 rounded-full bg-slate-800 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs font-bold">
+          SL
+        </div>
+        <div class="hidden sm:block text-left">
+          <div class="text-xs font-semibold text-slate-200 leading-tight">Kasir Salapan</div>
+          <div class="text-[10px] text-emerald-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Shift Aktif
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN BODY CONTAINER ================= -->
+  <div class="flex-1 flex overflow-hidden no-print">
+
+    <!-- ================= LEFT: CATALOG & FILTER ================= -->
+    <main class="flex-1 flex flex-col bg-slate-950 overflow-hidden border-r border-slate-800">
+      
+      <!-- Search & Category Bar Header -->
+      <div class="p-3 bg-slate-900/60 border-b border-slate-800 flex flex-col gap-2.5">
+        <!-- Search and Mobile Tier Switch -->
+        <div class="flex items-center gap-2">
+          <!-- Search Bar -->
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="search-input" oninput="handleSearch(this.value)"
+              placeholder="Cari menu (mis: es kopi, steak, dimsum, v60)..." 
+              class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-8 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition">
+            <button id="search-clear-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Total Items Badge -->
+          <div class="hidden sm:flex items-center px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-400">
+            <span id="filtered-count" class="font-bold text-amber-400 mr-1">74</span> Menu
+          </div>
+        </div>
+
+        <!-- Category Horizontal Scroll Pills -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-medium" id="category-pills-container">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+
+      <!-- Product Cards Grid -->
+      <div class="flex-1 overflow-y-auto p-3.5">
+        <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          <!-- Dynamically populated by JS -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center">
+          <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mb-3">
+            <i data-lucide="coffee" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-300">Menu tidak ditemukan</h3>
+          <p class="text-xs text-slate-500 max-w-xs mt-1">Coba gunakan kata kunci lain atau pilih kategori "Semua Menu".</p>
+          <button onclick="clearSearch(); setCategory('all');" class="mt-3 px-3 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg text-xs font-semibold hover:bg-amber-500/20 transition">
+            Reset Pencarian
+          </button>
+      <!-- Mobile Floating Cart Bar -->
+      <div id="mobile-cart-bar" onclick="toggleMobileCart(true)"
+        class="hidden md:hidden fixed bottom-3 left-3 right-3 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 p-3 rounded-2xl shadow-2xl flex items-center justify-between z-30 cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-150">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center font-black text-xs">
+            <span id="mobile-bar-qty">0</span>
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-900 leading-tight">Total Pesanan</div>
+            <div id="mobile-bar-total" class="font-mono text-sm font-black text-slate-950 leading-tight">Rp 0</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 text-xs font-black uppercase tracking-wider bg-slate-950/10 px-3 py-1.5 rounded-xl">
+          <span>Lihat Pesanan</span>
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ================= RIGHT: CART & ORDER DETAILS (RESPONSIVE DRAWER ON MOBILE) ================= -->
+    <aside id="cart-aside" class="hidden md:flex md:w-80 lg:w-96 flex-col bg-slate-900/95 border-l border-slate-800 flex-shrink-0 z-40 fixed inset-0 md:relative md:inset-auto md:z-10 transition-all duration-200">
+      
+      <!-- Cart Header -->
+      <div class="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+        <div class="flex items-center gap-2">
+          <!-- Mobile Back / Close Button -->
+          <button type="button" onclick="toggleMobileCart(false)" class="md:hidden p-1 text-slate-400 hover:text-slate-100 mr-1">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+          </button>
+          <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-sm text-slate-100">Daftar Pesanan</h2>
+            <span id="cart-item-count" class="text-[11px] text-slate-400">0 item</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="clearCart()" class="text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2 py-1 rounded-md transition flex items-center gap-1 font-medium">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Reset
+          </button>
+          <button type="button" onclick="toggleMobileCart(false)" class="md:hidden text-slate-400 hover:text-slate-200 p-1">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Order Metadata (Customer Name, Table, Order Type) -->
+      <div class="p-2.5 bg-slate-950/40 border-b border-slate-800 space-y-2">
+        <!-- Order Type Selector -->
+        <div class="grid grid-cols-3 gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+          <button type="button" onclick="setOrderType('Dine In')" id="type-dinein"
+            class="order-type-btn py-1 text-[11px] font-semibold rounded bg-amber-500 text-slate-950 transition">
+            Dine In
+          </button>
+          <button type="button" onclick="setOrderType('Take Away')" id="type-takeaway"
+            class="order-type-btn py-1 text-[11px] font-medium text-slate-400 hover:text-slate-200 transition">
+            Take Away
+          </button>
+          <button type="button" onclick="setOrderType('Online')" id="type-online"
+            class="order-type-btn py-1 text-[11px] font-medium text-slate-400 hover:text-slate-200 transition">
+            Delivery
+          </button>
+        </div>
+
+        <!-- Customer Name & Table Input -->
+        <div class="grid grid-cols-2 gap-1.5">
+          <div>
+            <input type="text" id="cust-name" placeholder="Nama Pelanggan"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <input type="text" id="table-no" placeholder="No Meja / Order"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Items Scroll List -->
+      <div class="flex-1 overflow-y-auto p-2.5 space-y-2" id="cart-items-container">
+        <!-- Dynamically rendered items -->
+      </div>
+
+      <!-- Cart Empty State -->
+      <div id="cart-empty-view" class="flex-1 flex flex-col items-center justify-center p-4 text-center">
+        <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 mb-2">
+          <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+        </div>
+        <p class="text-xs font-semibold text-slate-300">Keranjang masih kosong</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">Pilih menu di sebelah kiri untuk menambahkan ke pesanan.</p>
+      </div>
+
+      <!-- Bottom Checkout Summary Box -->
+      <div class="p-3 bg-slate-950 border-t border-slate-800 space-y-2.5">
+        <!-- Breakdown -->
+        <div class="space-y-1 text-xs">
+          <div class="flex justify-between text-slate-400">
+            <span>Subtotal</span>
+            <span id="cart-subtotal" class="font-mono text-slate-200 font-semibold">Rp 0</span>
+          </div>
+          
+          <!-- Discount Row -->
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="flex items-center gap-1">
+              Diskon
+              <button onclick="promptDiscount()" class="text-[10px] text-amber-400 underline hover:text-amber-300" id="discount-label">
+                (0%)
+              </button>
+            </span>
+            <span id="cart-discount" class="font-mono text-rose-400">- Rp 0</span>
+          </div>
+
+          <!-- Total Final -->
+          <div class="pt-1.5 border-t border-slate-800 flex justify-between items-baseline">
+            <div>
+              <span class="font-bold text-sm text-slate-100">TOTAL</span>
+              <span class="text-[10px] text-amber-400 ml-1.5 font-medium" id="tier-badge-summary">Harga Offline</span>
+            </div>
+            <span id="cart-total" class="font-mono text-lg font-extrabold text-amber-400">Rp 0</span>
+          </div>
+        </div>
+
+        <!-- Checkout Button -->
+        <button id="btn-checkout" onclick="openCheckoutModal()" disabled
+          class="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition text-sm">
+          <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+          <span>BAYAR SEKARANG</span>
+        </button>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- ================= MODAL: CHECKOUT & PEMBAYARAN ================= -->
+  <div id="checkout-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div>
+          <h3 class="font-bold text-base text-slate-100">Pembayaran Pesanan</h3>
+          <p class="text-xs text-slate-400" id="modal-order-summary">Dine In • Meja 01</p>
+        </div>
+        <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-200 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4">
+        <!-- Total Tagihan -->
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-center">
+          <span class="text-xs text-slate-400 font-medium">Total Tagihan</span>
+          <div id="modal-total-amount" class="text-3xl font-extrabold font-mono text-amber-400 mt-0.5">Rp 0</div>
+        </div>
+
+        <!-- Pilihan Metode Pembayaran -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-300">Metode Pembayaran</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button type="button" onclick="setPaymentMethod('cash')" id="pay-method-cash"
+              class="pay-method-btn p-2 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-400 flex flex-col items-center gap-1 text-xs font-semibold transition">
+              <i data-lucide="banknote" class="w-4 h-4"></i> Tunai
+            </button>
+            <button type="button" onclick="setPaymentMethod('qris')" id="pay-method-qris"
+              class="pay-method-btn p-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 flex flex-col items-center gap-1 text-xs font-semibold transition hover:text-slate-200">
+              <i data-lucide="qr-code" class="w-4 h-4"></i> QRIS
+            </button>
+            <button type="button" onclick="setPaymentMethod('transfer')" id="pay-method-transfer"
+              class="pay-method-btn p-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 flex flex-col items-center gap-1 text-xs font-semibold transition hover:text-slate-200">
+              <i data-lucide="smartphone" class="w-4 h-4"></i> Transfer
+            </button>
+            <button type="button" onclick="setPaymentMethod('debit')" id="pay-method-debit"
+              class="pay-method-btn p-2 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 flex flex-col items-center gap-1 text-xs font-semibold transition hover:text-slate-200">
+              <i data-lucide="credit-card" class="w-4 h-4"></i> Debit
+            </button>
+          </div>
+        </div>
+
+        <!-- Section Khusus Tunai (Cash) -->
+        <div id="cash-payment-section" class="space-y-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-300">Jumlah Uang Diterima</label>
+            <div class="relative mt-1">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">Rp</span>
+              <input type="number" id="cash-received-input" oninput="calculateChange()"
+                placeholder="0"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-3 py-2 text-base font-mono font-bold text-slate-100 focus:outline-none focus:border-amber-500">
+            </div>
+          </div>
+
+          <!-- Quick Cash Buttons -->
+          <div class="grid grid-cols-4 gap-1.5 text-xs font-mono font-medium">
+            <button type="button" onclick="setCashAmount('exact')" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 text-center font-sans text-[11px]">Uang Pas</button>
+            <button type="button" onclick="setCashAmount(20000)" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 text-center">20.000</button>
+            <button type="button" onclick="setCashAmount(50000)" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 text-center">50.000</button>
+            <button type="button" onclick="setCashAmount(100000)" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 text-center">100.000</button>
+          </div>
+
+          <!-- Kembalian Display -->
+          <div id="change-card" class="p-3 rounded-xl border bg-slate-950 border-slate-800 flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-medium">Kembalian</span>
+            <span id="cash-change-display" class="font-mono text-lg font-bold text-emerald-400">Rp 0</span>
+          </div>
+        </div>
+
+        <!-- Section Non-Tunai (QRIS / Transfer Info) -->
+        <div id="non-cash-section" class="hidden p-4 rounded-xl bg-slate-950 border border-slate-800 text-center space-y-2">
+          <div class="inline-flex p-3 rounded-xl bg-white text-slate-950 mb-1">
+            <i data-lucide="qr-code" class="w-16 h-16"></i>
+          </div>
+          <p class="text-xs text-slate-300 font-semibold" id="non-cash-title">Scan QRIS Salapan Coffee</p>
+          <p class="text-[11px] text-slate-400">Pastikan notifikasi dana masuk telah diterima sebelum menyelesaikan transaksi.</p>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center gap-2">
+        <button type="button" onclick="closeCheckoutModal()" class="w-1/3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">
+          Batal
+        </button>
+        <button type="button" id="btn-process-payment" onclick="processPayment()"
+          class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5">
+          <i data-lucide="printer" class="w-4 h-4"></i> Selesaikan & Cetak Struk
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: STRUK PEMBAYARAN (RECEIPT PREVIEW) ================= -->
+  <div id="receipt-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      
+      <!-- Receipt Preview Container -->
+      <div class="flex-1 overflow-y-auto p-4 bg-slate-800/40">
+        <!-- Physical Thermal Paper Simulation -->
+        <div id="thermal-receipt-view" class="bg-white text-black p-5 rounded-lg shadow-md font-mono text-[11px] leading-relaxed mx-auto max-w-[300px]">
+          <!-- Header -->
+          <div class="text-center pb-3 border-b border-dashed border-gray-400 space-y-0.5">
+            <h2 class="font-extrabold text-sm uppercase tracking-wider">SALAPAN COFFEE</h2>
+            <p class="text-[10px]">& EATERY</p>
+            <p class="text-[9px] text-gray-600">Jl. Salapan No. 9, Kota Bandung</p>
+            <p class="text-[9px] text-gray-600">Telp / WA: 0812-3456-7890</p>
+          </div>
+
+          <!-- Metadata -->
+          <div class="py-2.5 border-b border-dashed border-gray-400 text-[10px] space-y-0.5">
+            <div class="flex justify-between">
+              <span>No: <strong id="rec-inv">INV-20260911-0001</strong></span>
+              <span id="rec-time">12:30</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Kasir: <span id="rec-cashier">Kasir Salapan</span></span>
+              <span>Tipe: <span id="rec-type">Dine In</span></span>
+            </div>
+            <div class="flex justify-between">
+              <span>Plg: <span id="rec-cust">Umum</span></span>
+              <span>Meja: <span id="rec-table">-</span></span>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="py-2.5 border-b border-dashed border-gray-400 space-y-1.5" id="rec-items-list">
+            <!-- Dynamic Items -->
+          </div>
+
+          <!-- Totals -->
+          <div class="py-2.5 border-b border-dashed border-gray-400 space-y-1 text-[10px]">
+            <div class="flex justify-between">
+              <span>Subtotal:</span>
+              <span id="rec-subtotal">Rp 0</span>
+            </div>
+            <div class="flex justify-between" id="rec-discount-row">
+              <span>Diskon:</span>
+              <span id="rec-discount">- Rp 0</span>
+            </div>
+            <div class="flex justify-between font-bold text-xs pt-1 border-t border-gray-300">
+              <span>TOTAL:</span>
+              <span id="rec-total">Rp 0</span>
+            </div>
+            <div class="flex justify-between pt-1 text-[10px]">
+              <span>Bayar (<span id="rec-paymethod">TUNAI</span>):</span>
+              <span id="rec-paid">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-[10px]">
+              <span>Kembalian:</span>
+              <span id="rec-change">Rp 0</span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="pt-3 text-center space-y-1 text-[9px] text-gray-600">
+            <p>Terima kasih atas kunjungan Anda!</p>
+            <p>Follow IG: @salapancoffee</p>
+            <p class="font-bold text-black mt-2">=== SALAPAN COFFEE & EATERY ===</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
+        <button type="button" onclick="closeReceiptModal()" class="w-1/3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+          Tutup
+        </button>
+        <button type="button" onclick="printReceipt()" class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak Struk (Print)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: RIWAYAT TRANSAKSI ================= -->
+  <div id="history-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+      
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div class="flex items-center gap-2">
+          <i data-lucide="receipt" class="w-5 h-5 text-cyan-400"></i>
+          <h3 class="font-bold text-base text-slate-100">Riwayat Transaksi Penjualan</h3>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Search & Filter History -->
+      <div class="p-3 bg-slate-950/40 border-b border-slate-800 flex items-center gap-2">
+        <input type="text" id="history-search" oninput="renderHistoryTable(this.value)" placeholder="Cari invoice atau nama pelanggan..."
+          class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+        <button onclick="clearAllHistory()" class="text-xs text-rose-400 hover:text-rose-300 px-3 py-1.5 rounded-lg border border-rose-500/20 hover:bg-rose-500/10 transition">
+          Hapus Semua Riwayat
+        </button>
+      </div>
+
+      <!-- History Table -->
+      <div class="flex-1 overflow-y-auto p-3">
+        <table class="w-full text-left text-xs">
+          <thead class="text-[11px] text-slate-400 uppercase bg-slate-950/60 border-b border-slate-800 sticky top-0">
+            <tr>
+              <th class="py-2.5 px-3">No. Invoice</th>
+              <th class="py-2.5 px-3">Waktu</th>
+              <th class="py-2.5 px-3">Pelanggan</th>
+              <th class="py-2.5 px-3">Item</th>
+              <th class="py-2.5 px-3">Total</th>
+              <th class="py-2.5 px-3">Metode</th>
+              <th class="py-2.5 px-3 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body" class="divide-y divide-slate-800/60 font-mono">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+        
+        <div id="history-empty" class="hidden text-center py-12 text-slate-500 text-xs">
+          Belum ada riwayat transaksi tersimpan.
+        </div>
+      </div>
+
+      <div class="p-3 border-t border-slate-800 bg-slate-950/60 flex justify-end">
+        <button onclick="closeHistoryModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition">
+          Tutup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: LAPORAN & OMSET ================= -->
+  <div id="report-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+      
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div class="flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="font-bold text-base text-slate-100">Ringkasan Laporan Penjualan</h3>
+        </div>
+        <button onclick="closeReportModal()" class="text-slate-400 hover:text-slate-200 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-4">
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-3 gap-3">
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 font-medium">Total Omset</span>
+            <div id="rep-total-revenue" class="text-xl font-extrabold font-mono text-emerald-400 mt-0.5">Rp 0</div>
+          </div>
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 font-medium">Jumlah Transaksi</span>
+            <div id="rep-total-orders" class="text-xl font-extrabold font-mono text-amber-400 mt-0.5">0</div>
+          </div>
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 font-medium">Rata-rata Order (AOV)</span>
+            <div id="rep-avg-order" class="text-xl font-extrabold font-mono text-cyan-400 mt-0.5">Rp 0</div>
+          </div>
+        </div>
+
+        <!-- Top Selling Items -->
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <h4 class="font-bold text-xs text-slate-200 flex items-center gap-1.5">
+            <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i> Menu Terlaris (Top Selling)
+          </h4>
+          <div id="rep-top-items" class="space-y-1.5 text-xs">
+            <!-- Dynamic Top items -->
+          </div>
+        </div>
+
+        <!-- Payment Breakdown -->
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <h4 class="font-bold text-xs text-slate-200 flex items-center gap-1.5">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-cyan-400"></i> Metode Pembayaran
+          </h4>
+          <div id="rep-payment-methods" class="grid grid-cols-2 gap-2 text-xs">
+            <!-- Dynamic Payment Breakdown -->
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
+        <button onclick="exportHistoryCSV()" class="px-3 py-2 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Ekspor CSV / Excel
+        </button>
+        <button onclick="closeReportModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition">
+          Tutup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= THERMAL RECEIPT PRINT CONTAINER (HIDDEN UNTIL PRINTED) ================= -->
+  <div id="receipt-print-area">
+    <!-- Populated directly on print trigger -->
+  </div>
+
+  <!-- Scripts -->
+  <script src="menu-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
